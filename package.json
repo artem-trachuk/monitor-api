@@ -1,0 +1,21 @@
+{
+  "name": "monitor-api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon ./bin/www"
+  },
+  "dependencies": {
+    "compression": "^1.7.3",
+    "debug": "^4.1.1",
+    "express": "~4.16.0",
+    "express-rate-limit": "^3.3.2",
+    "firebase-admin": "^6.5.1",
+    "mongoose": "^5.4.11",
+    "morgan": "~1.9.0",
+    "multer": "^1.4.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.10"
+  }
+}

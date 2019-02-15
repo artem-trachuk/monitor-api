@@ -1,0 +1,1 @@
+JSONWEBTOKENSECRETKEY: String, secret key for JsonWebToken generation
