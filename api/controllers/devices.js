@@ -2,6 +2,8 @@ const Device = require("../models/device").device;
 const Hub = require("../models/hub").Hub;
 const Permission = require("../models/permission").permission;
 
+const path = require("../routes/file-path").path;
+
 exports.post = (req, res, next) => {
   const data = JSON.parse(req.body.values);
   Hub.findById(data.hub)
@@ -29,12 +31,12 @@ exports.post = (req, res, next) => {
             ptz: data.ptz,
             photos: req.files.photos
               ? req.files.photos.map(file => {
-                  return { path: file.path, originalname: file.originalname };
+                  return { path: path.relativePhotos + file.filename, originalname: file.originalname };
                 })
               : undefined,
             documents: req.files.documents
               ? req.files.documents.map(file => {
-                  return { path: file.path, originalname: file.originalname };
+                  return { path: path.relativeDocuments + file.filename, originalname: file.originalname };
                 })
               : undefined
           })
@@ -114,17 +116,22 @@ exports.patchById = (req, res, next) => {
               serial: device.serial,
               ptz: device.ptz
             };
+            var photos = [];
             if (req.files.photos) {
-              updateObj.photos = req.files.photos.map(file => {
-                return { path: file.path, originalname: file.originalname };
+              photos = req.files.photos.map(file => {
+                return { path: path.relativePhotos + file.filename, originalname: file.originalname };
               }); // files from multer
             }
+            var documents = [];
             if (req.files.documents) {
-              updateObj.documents = req.files.documents.map(file => {
-                return { path: file.path, originalname: file.originalname };
+              documents = req.files.documents.map(file => {
+                return { path: path.relativeDocuments + file.filename, originalname: file.originalname };
               }); // files from multer
             }
-            Device.findByIdAndUpdate(req.params.id, updateObj)
+            Device.findByIdAndUpdate(req.params.id, {
+              $set: {...updateObj},
+              $push: { photos: photos, documents: documents }
+            })
               .then(result => {
                 res.status(200).json({
                   ok: true,

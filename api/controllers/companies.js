@@ -2,6 +2,8 @@ const Company = require("../models/company").company;
 const User = require("../models/user").User;
 const Permissions = require("../models/permission").permission;
 
+const path = require("../routes/file-path").path;
+
 exports.createCompany = (req, res, next) => {
   const owner = req.user._id;
   const company = JSON.parse(req.body.values);
@@ -25,15 +27,15 @@ exports.createCompany = (req, res, next) => {
     phone: company.phone,
     address: company.address,
     note: company.note,
-    logo: req.files.logo ? req.files.logo[0] : undefined,
+    logo: req.files.logo ? (path.relativeLogo + req.files.logo[0].filename) : undefined,
     photos: req.files.photos
       ? req.files.photos.map(file => {
-          return { path: file.path, originalname: file.originalname };
+          return { path: path.relativePhotos + file.filename, originalname: file.originalname };
         })
       : undefined,
     documents: req.files.documents
       ? req.files.documents.map(file => {
-          return { path: file.path, originalname: file.originalname };
+          return { path: path.relativeDocuments + file.filename, originalname: file.originalname };
         })
       : undefined
   };
@@ -56,7 +58,10 @@ exports.setPermissions = (req, res, next) => {
   })
     .then(result => {
       res.status(200).json({
-        ok: true
+        ok: true,
+        result: {
+          _id: res.company
+        }
       });
     })
     .catch(error => next(error));
@@ -166,19 +171,30 @@ exports.patchById = (req, res, next) => {
         email: company.email
       };
       if (req.files.logo) {
-        updateObj.logo = req.files.logo[0].path; // files from multer
+        updateObj.logo = path.relativeLogo + req.files.logo[0].filename; // files from multer
       }
+      var photos = [];
       if (req.files.photos) {
-        updateObj.photos = req.files.photos.map(file => {
-          return { path: file.path, originalname: file.originalname };
+        photos = req.files.photos.map(file => {
+          return {
+            path: path.relativePhotos + file.filename,
+            originalname: file.originalname
+          };
         }); // files from multer
       }
+      var documents = [];
       if (req.files.documents) {
-        updateObj.documents = req.files.documents.map(file => {
-          return { path: file.path, originalname: file.originalname };
+        documents = req.files.documents.map(file => {
+          return {
+            path: path.relativeDocuments + file.filename,
+            originalname: file.originalname
+          };
         }); // files from multer
       }
-      Company.findByIdAndUpdate(id, updateObj)
+      Company.findByIdAndUpdate(id, {
+        $set: { ...updateObj },
+        $push: { photos: photos, documents: documents }
+      })
         .then(result => {
           res.status(200).json({
             ok: true,

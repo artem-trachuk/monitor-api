@@ -1,6 +1,8 @@
 const Hub = require("../models/hub").Hub;
 const Permissions = require("../models/permission").permission;
 
+const path = require("../routes/file-path").path;
+
 exports.post = (req, res, next) => {
   const data = JSON.parse(req.body.values);
   Permissions.findOne({
@@ -15,12 +17,12 @@ exports.post = (req, res, next) => {
         note: data.note,
         photos: req.files.photos
           ? req.files.photos.map(file => {
-              return { path: file.path, originalname: file.originalname };
+              return { path: path.relativePhotos + file.filename, originalname: file.originalname };
             })
           : undefined,
         documents: req.files.documents
           ? req.files.documents.map(file => {
-              return { path: file.path, originalname: file.originalname };
+              return { path: path.relativeDocuments + file.filename, originalname: file.originalname };
             })
           : undefined,
         LatLng: data.LatLng
@@ -98,17 +100,22 @@ exports.patchById = (req, res, next) => {
         phone: values.phone,
         email: values.email
       };
+      var photos = [];
       if (req.files.photos) {
-        updateObj.photos = req.files.photos.map(file => {
-          return { path: file.path, originalname: file.originalname };
+        photos = req.files.photos.map(file => {
+          return { path: path.relativePhotos + file.filename, originalname: file.originalname };
         }); // files from multer
       }
+      var documents = [];
       if (req.files.documents) {
-        updateObj.documents = req.files.documents.map(file => {
-          return { path: file.path, originalname: file.originalname };
+        documents = req.files.documents.map(file => {
+          return { path: path.relativeDocuments + file.filename, originalname: file.originalname };
         }); // files from multer
       }
-      Hub.findByIdAndUpdate(req.params.id, updateObj)
+      Hub.findByIdAndUpdate(req.params.id, {
+        $set: {...updateObj},
+        $push: { photos: photos, documents: documents }
+      })
         .then(updateResult => {
           res.status(200).json({
             ok: true,
