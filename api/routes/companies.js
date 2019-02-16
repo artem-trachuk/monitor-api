@@ -2,16 +2,17 @@ const express = require("express");
 const router = express.Router();
 const companiesController = require("../controllers/companies");
 const checkAuth = require("../middleware/check-auth");
+const path = require("./file-path").path;
 
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
     if (file.fieldname === "photos") {
-      cb(null, "uploads/photos/");
+      cb(null, path.photos);
     } else if (file.fieldname === "logo") {
-      cb(null, "uploads/logo/");
+      cb(null, path.logo);
     } else {
-      cb(null, "uploads/documents/");
+      cb(null, path.documents);
     }
   },
   filename: function(req, file, cb) {

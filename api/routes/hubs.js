@@ -3,14 +3,15 @@ const router = express.Router();
 const checkAuth = require("../middleware/check-auth");
 
 const hubsController = require("../controllers/hubs");
+const path = require("./file-path").path;
 
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
     if (file.fieldname === "photos") {
-      cb(null, "uploads/photos/");
+      cb(null, path.photos);
     } else {
-      cb(null, "uploads/documents/");
+      cb(null, path.documents);
     }
   },
   filename: function(req, file, cb) {
