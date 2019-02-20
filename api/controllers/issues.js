@@ -130,3 +130,109 @@ exports.postById = (req, res, next) => {
     })
     .catch(error => next(error));
 };
+
+exports.patchById = (req, res, next) => {
+  Issue.findById(req.params.id)
+    .populate("company")
+    .then(issue => {
+      Permission.findOne({
+        user: req.user._id,
+        company: issue.company.id,
+        update: true
+      })
+        .then(permission => {
+          if (permission && req.query.open) {
+            Issue.findByIdAndUpdate(req.params.id, {
+              open: true
+            })
+              .then(result => {
+                res.status(200).json({
+                  ok: true,
+                  result: result
+                });
+              })
+              .catch(error => next(error));
+          } else if (permission && req.query.replyId) {
+            Issue.findOneAndUpdate(
+              { _id: req.params.id, "replies._id": req.query.replyId },
+              {
+                $set: {
+                  "replies.$.reply": req.body.message
+                }
+              }
+            )
+              .then(result => {
+                res.status(200).json({
+                  ok: true,
+                  result: {
+                    hub: issue.hub._id
+                  }
+                });
+              })
+              .catch(error => next(error));
+          } else if (permission) {
+            Issue.findByIdAndUpdate(req.params.id, {
+              message: req.body.message
+            })
+              .then(result => {
+                res.status(200).json({
+                  ok: true,
+                  result: result
+                });
+              })
+              .catch(error => next(error));
+          } else {
+            next("Error in issues/patchById");
+          }
+        })
+        .catch(error => next(error));
+    })
+    .catch(error => next(error));
+};
+
+exports.deleteById = (req, res, next) => {
+  Issue.findById(req.params.id)
+    .populate("company")
+    .then(issue => {
+      Permission.findOne({
+        user: req.user._id,
+        company: issue.company.id,
+        update: true
+      })
+        .then(permission => {
+          if (permission && !req.query.replyId) {
+            Issue.findByIdAndDelete(req.params.id)
+              .then(result => {
+                res.status(200).json({
+                  ok: true,
+                  result: {
+                    hub: issue.hub._id
+                  }
+                });
+              })
+              .catch(error => next(error));
+          } else if (permission && req.query.replyId) {
+            Issue.findByIdAndUpdate(req.params.id, {
+              $pull: {
+                replies: {
+                  _id: req.query.replyId
+                }
+              }
+            })
+              .then(result => {
+                res.status(200).json({
+                  ok: true,
+                  result: {
+                    hub: issue.hub._id
+                  }
+                });
+              })
+              .catch(error => next(error));
+          } else {
+            next("You have no permission");
+          }
+        })
+        .catch(error => next(error));
+    })
+    .catch(error => next(error));
+};
