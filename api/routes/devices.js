@@ -42,4 +42,6 @@ router.patch(
   devicesController.patchById
 );
 
+router.delete("/:id", checkAuth, devicesController.deleteById);
+
 module.exports = router;

@@ -1,5 +1,6 @@
 const Company = require("../models/company").company;
 const Permissions = require("../models/permission").permission;
+
 module.exports.post = (req, res, next) => {
   Company.findById(req.body.company).then(company => {
     if (company.owner.toString() !== req.user._id.toString()) {

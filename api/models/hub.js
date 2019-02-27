@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const Issue = require("./issue").Issue;
+const Device = require("./device").device;
+
+const path = require("../routes/file-path").path;
+const removeFiles = require("../fshelper").removeFiles;
+
 const hubSchema = new mongoose.Schema({
   name: String,
   company: {
@@ -17,7 +23,8 @@ const hubSchema = new mongoose.Schema({
     type: [
       {
         path: String,
-        originalname: String
+        originalname: String,
+        filename: String
       }
     ]
   },
@@ -25,10 +32,26 @@ const hubSchema = new mongoose.Schema({
     type: [
       {
         path: String,
-        originalname: String
+        originalname: String,
+        filename: String
       }
     ]
   }
+});
+
+hubSchema.pre("remove", function(next) {
+  const id = this._doc._id;
+  const photos = this._doc.photos;
+  const documents = this._doc.documents;
+  removeFiles(photos.map(p => path.photos + p.filename));
+  removeFiles(documents.map(p => path.documents + p.filename));
+  Issue.deleteMany({ hub: id })
+    .then(issueResult => Device.find({ hub: id }))
+    .then(devices => {
+      return devices.forEach(device => device.remove());
+    })
+    .then(deviceResult => next())
+    .catch(error => {});
 });
 
 hubSchema.virtual("devices", {

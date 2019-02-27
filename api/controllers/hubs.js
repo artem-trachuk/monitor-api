@@ -2,6 +2,7 @@ const Hub = require("../models/hub").Hub;
 const Permissions = require("../models/permission").permission;
 
 const path = require("../routes/file-path").path;
+const removeFiles = require("../fshelper").removeFiles;
 
 exports.post = (req, res, next) => {
   const data = JSON.parse(req.body.values);
@@ -17,12 +18,20 @@ exports.post = (req, res, next) => {
         note: data.note,
         photos: req.files.photos
           ? req.files.photos.map(file => {
-              return { path: path.relativePhotos + file.filename, originalname: file.originalname };
+              return {
+                path: path.relativePhotos + file.filename,
+                originalname: file.originalname,
+                filename: file.filename
+              };
             })
           : undefined,
         documents: req.files.documents
           ? req.files.documents.map(file => {
-              return { path: path.relativeDocuments + file.filename, originalname: file.originalname };
+              return {
+                path: path.relativeDocuments + file.filename,
+                originalname: file.originalname,
+                filename: file.filename
+              };
             })
           : undefined,
         LatLng: data.LatLng
@@ -103,17 +112,25 @@ exports.patchById = (req, res, next) => {
       var photos = [];
       if (req.files.photos) {
         photos = req.files.photos.map(file => {
-          return { path: path.relativePhotos + file.filename, originalname: file.originalname };
+          return {
+            path: path.relativePhotos + file.filename,
+            originalname: file.originalname,
+            filename: file.filename
+          };
         }); // files from multer
       }
       var documents = [];
       if (req.files.documents) {
         documents = req.files.documents.map(file => {
-          return { path: path.relativeDocuments + file.filename, originalname: file.originalname };
+          return {
+            path: path.relativeDocuments + file.filename,
+            originalname: file.originalname,
+            filename: file.filename
+          };
         }); // files from multer
       }
       Hub.findByIdAndUpdate(req.params.id, {
-        $set: {...updateObj},
+        $set: { ...updateObj },
         $push: { photos: photos, documents: documents }
       })
         .then(updateResult => {
@@ -125,6 +142,75 @@ exports.patchById = (req, res, next) => {
         .catch(error => next(error));
     } else {
       next("You have no permission.");
+    }
+  });
+};
+
+exports.deleteById = (req, res, next) => {
+  Hub.findById(req.params.id).then(hub => {
+    if (hub) {
+      Permissions.findOne({
+        user: req.user,
+        company: hub.company,
+        delete: true
+      }).then(permission => {
+        if (permission) {
+          if (req.query.photo) {
+            return Hub.findByIdAndUpdate(hub.id, {
+              $pull: {
+                photos: {
+                  _id: req.query.photo
+                }
+              }
+            }).then(updateResult => {
+              removeFiles([
+                path.photos +
+                  hub.photos.find(
+                    p => p._id.toString() === req.query.photo.toString()
+                  ).filename
+              ]);
+              res.status(200).json({
+                ok: true
+              });
+            });
+          }
+          if (req.query.document) {
+            return Hub.findByIdAndUpdate(hub.id, {
+              $pull: {
+                documents: {
+                  _id: req.query.document
+                }
+              }
+            }).then(updateResult => {
+              removeFiles([
+                path.documents +
+                  hub.documents.find(
+                    p => p._id.toString() === req.query.document.toString()
+                  ).filename
+              ]);
+              res.status(200).json({
+                ok: true
+              });
+            });
+          }
+          return Hub.findById(hub.id)
+            .then(hub => {
+              if (hub) {
+                hub.remove().then(removeResult => {
+                  res.status(200).json({
+                    ok: true,
+                    result: removeResult
+                  });
+                })
+              }
+            })
+            .catch(error => next(error));
+        } else {
+          next("No permission");
+        }
+      });
+    } else {
+      next("No hub");
     }
   });
 };

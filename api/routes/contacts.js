@@ -6,6 +6,8 @@ const contacts = require("../controllers/contacts");
 // GET all contacts
 router.get("/", checkAuth, contacts.get);
 
+router.get("/:id", checkAuth, contacts.getById);
+
 router.post("/", checkAuth, contacts.post);
 
 module.exports = router;

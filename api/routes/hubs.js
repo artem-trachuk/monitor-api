@@ -45,4 +45,6 @@ router.patch(
 /* GET hub by Id */
 router.get("/:id", checkAuth, hubsController.getById);
 
+router.delete("/:id", checkAuth, hubsController.deleteById);
+
 module.exports = router;

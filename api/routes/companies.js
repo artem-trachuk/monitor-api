@@ -61,4 +61,6 @@ router.patch(
   companiesController.patchById
 );
 
+router.delete("/:id", checkAuth, companiesController.deleteById);
+
 module.exports = router;

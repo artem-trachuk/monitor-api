@@ -78,12 +78,14 @@ exports.get = (req, res, next) => {
               message: comment.message,
               open: comment.open,
               user: comment.user,
+              edited: comment.edited,
               replies: comment.replies.map(reply => {
                 return {
                   _id: reply._id,
                   reply: reply.reply,
                   user: reply.user,
-                  date: reply._id.getTimestamp()
+                  date: reply._id.getTimestamp(),
+                  edited: reply.edited
                 };
               }),
               date: comment._id.getTimestamp()
@@ -157,8 +159,9 @@ exports.patchById = (req, res, next) => {
               { _id: req.params.id, "replies._id": req.query.replyId },
               {
                 $set: {
-                  "replies.$.reply": req.body.message
-                }
+                  "replies.$.reply": req.body.message,
+                  "replies.$.edited": Date.now()
+                },
               }
             )
               .then(result => {
@@ -172,7 +175,8 @@ exports.patchById = (req, res, next) => {
               .catch(error => next(error));
           } else if (permission) {
             Issue.findByIdAndUpdate(req.params.id, {
-              message: req.body.message
+              message: req.body.message,
+              edited: Date.now()
             })
               .then(result => {
                 res.status(200).json({

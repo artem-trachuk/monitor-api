@@ -22,6 +22,9 @@ const issueSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Hub"
   },
+  edited: {
+    type: Date
+  },
   replies: [
     new mongoose.Schema({
       reply: {
@@ -32,6 +35,9 @@ const issueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
+      },
+      edited: {
+        type: Date
       }
     })
   ]
