@@ -5,4 +5,6 @@ const permissionsController = require("../controllers/permissions");
 
 router.post("/", checkAuth, permissionsController.post);
 
+router.get("/", checkAuth, permissionsController.get);
+
 module.exports = router;

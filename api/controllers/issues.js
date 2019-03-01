@@ -49,6 +49,7 @@ exports.get = (req, res, next) => {
           open: true
         })
           .populate("hub company user")
+          .populate("replies.user")
           .sort({ _id: -1 })
           .then(issues => {
             res.status(200).json({
@@ -161,7 +162,7 @@ exports.patchById = (req, res, next) => {
                 $set: {
                   "replies.$.reply": req.body.message,
                   "replies.$.edited": Date.now()
-                },
+                }
               }
             )
               .then(result => {

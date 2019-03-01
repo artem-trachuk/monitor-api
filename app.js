@@ -32,6 +32,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/guest", express.static(path.join(__dirname, "guest")));
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");

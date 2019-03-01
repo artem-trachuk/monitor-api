@@ -46,8 +46,10 @@ const companySchema = new mongoose.Schema({
     ]
   },
   logo: {
-    path: String,
-    filename: String
+    type: {
+      path: String,
+      filename: String
+    }
   }
 });
 

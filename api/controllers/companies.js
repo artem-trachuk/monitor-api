@@ -190,6 +190,11 @@ exports.patchById = (req, res, next) => {
           path: path.relativeLogo + req.files.logo[0].filename, // files from multer,
           filename: req.files.logo[0].filename
         };
+        Company.findById(id).then(company => {
+          if (company && company.logo) {
+            removeFiles([path.logo + company.logo.filename]);
+          }
+        });
       }
       var photos = [];
       if (req.files.photos) {

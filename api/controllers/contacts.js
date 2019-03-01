@@ -36,7 +36,7 @@ exports.getById = (req, res, next) => {
             ok: true,
             result: {
               ...permission._doc,
-              ...contact._doc,
+              ...contact._doc
             }
           });
         } else {
@@ -49,12 +49,66 @@ exports.getById = (req, res, next) => {
 
 exports.post = (req, res, next) => {
   const contact = req.body;
-  Contact.create(contact)
-    .then(result => {
-      res.status(200).json({
-        ok: true,
-        result: result
+  Permissions.findOne({
+    user: req.user,
+    company: contact.company,
+    create: true
+  }).then(permission => {
+    if (permission) {
+      Contact.create(contact)
+        .then(result => {
+          res.status(200).json({
+            ok: true,
+            result: result
+          });
+        })
+        .catch(error => next(error));
+    }
+  });
+};
+
+exports.patchById = (req, res, next) => {
+  const id = req.params.id;
+  const changedContact = req.body;
+  Contact.findById(id).then(contact => {
+    if (contact) {
+      Permissions.findOne({
+        user: req.user,
+        company: contact.company,
+        update: true
+      }).then(permission => {
+        if (permission) {
+          Contact.findByIdAndUpdate(id, {
+            name: changedContact.name,
+            phone: changedContact.phone
+          }).then(updateResult => {
+            res.status(200).json({
+              ok: true
+            });
+          });
+        }
       });
-    })
-    .catch(error => next(error));
+    }
+  });
+};
+
+exports.deleteById = (req, res, next) => {
+  const id = req.params.id;
+  Contact.findById(id).then(contact => {
+    if (contact) {
+      Permissions.findOne({
+        user: req.user,
+        company: contact.company,
+        delete: true
+      }).then(permission => {
+        if (permission) {
+          contact.remove().then(deleteResult => {
+            res.status(200).json({
+              ok: true
+            });
+          });
+        }
+      });
+    }
+  });
 };

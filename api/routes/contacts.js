@@ -10,4 +10,8 @@ router.get("/:id", checkAuth, contacts.getById);
 
 router.post("/", checkAuth, contacts.post);
 
+router.patch("/:id", checkAuth, contacts.patchById);
+
+router.delete("/:id", checkAuth, contacts.deleteById);
+
 module.exports = router;
